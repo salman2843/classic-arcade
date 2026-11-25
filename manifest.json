@@ -1,0 +1,24 @@
+{
+  "version": "1",
+  "files": [
+    "python/boot.py",
+    "python/arcade/__init__.py",
+    "python/arcade/actions.py",
+    "python/arcade/app.py",
+    "python/arcade/input.py",
+    "python/arcade/scene.py",
+    "python/arcade/storage.py",
+    "python/arcade/theme.py",
+    "python/arcade/timing.py",
+    "python/games/__init__.py",
+    "python/games/snake/__init__.py",
+    "python/games/snake/constants.py",
+    "python/games/snake/logic.py",
+    "python/games/snake/scene.py",
+    "python/games/tictactoe/__init__.py",
+    "python/games/tictactoe/constants.py",
+    "python/games/tictactoe/logic.py",
+    "python/games/tictactoe/ai.py",
+    "python/games/tictactoe/scene.py"
+  ]
+}

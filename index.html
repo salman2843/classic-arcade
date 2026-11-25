@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Classic games rebuilt in Python with pygame-ce and running in the browser via WebAssembly. No installs, no servers." />
+  <meta name="theme-color" content="#0b1120" />
+  <title>Arcade / Classic — Python games in the browser</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230b1120'/%3E%3Crect x='7' y='9' width='5' height='5' rx='1' fill='%2334d399'/%3E%3Crect x='14' y='9' width='5' height='5' rx='1' fill='%2334d399'/%3E%3Crect x='14' y='16' width='5' height='5' rx='1' fill='%2334d399'/%3E%3Crect x='21' y='16' width='5' height='5' rx='1' fill='%23fb7185'/%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="./src/site.css" />
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#top" aria-label="Arcade Classic home">
+      <span class="brand__mark" aria-hidden="true"></span>
+      ARCADE<span class="brand__slash">/</span>CLASSIC
+    </a>
+    <nav class="topbar__nav">
+      <a href="#games">Games</a>
+      <a href="./docs/ARCHITECTURE.html">How it works</a>
+      <!-- TODO: point this at your repository once it is on GitHub -->
+      <a class="is-muted" href="#" data-repo-link>Source</a>
+    </nav>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <p class="eyebrow">Python &rarr; WebAssembly</p>
+      <h1>Two classics.<br /><em>Real Python.</em></h1>
+      <p class="lede">
+        Tic-Tac-Toe and Snake, rebuilt from scratch in Python with pygame-ce and
+        compiled to WebAssembly. No plugins, no installs, no server &mdash; the
+        runtime downloads once and every frame runs in your browser.
+      </p>
+      <div class="stat-row">
+        <div class="stat"><strong>3.14</strong><span>CPython in WASM</span></div>
+        <div class="stat"><strong>60 fps</strong><span>canvas frames</span></div>
+        <div class="stat"><strong>0</strong><span>servers involved</span></div>
+      </div>
+    </section>
+
+    <section id="games" class="games" aria-label="Games">
+      <article class="card" data-game="tictactoe">
+        <div class="card__thumb">
+          <svg viewBox="0 0 160 100" role="img" aria-label="Tic-Tac-Toe preview">
+            <rect width="160" height="100" rx="10" fill="#0b1120" />
+            <g stroke="#334155" stroke-width="2" stroke-linecap="round">
+              <line x1="66" y1="18" x2="66" y2="82" />
+              <line x1="94" y1="18" x2="94" y2="82" />
+              <line x1="40" y1="38" x2="120" y2="38" />
+              <line x1="40" y1="62" x2="120" y2="62" />
+            </g>
+            <g stroke="#fb7185" stroke-width="4" stroke-linecap="round">
+              <line x1="46" y1="24" x2="60" y2="34" />
+              <line x1="60" y1="24" x2="46" y2="34" />
+            </g>
+            <circle cx="107" cy="50" r="8" fill="none" stroke="#38bdf8" stroke-width="4" />
+            <g stroke="#34d399" stroke-width="4" stroke-linecap="round">
+              <line x1="74" y1="68" x2="86" y2="78" />
+              <line x1="86" y1="68" x2="74" y2="78" />
+            </g>
+          </svg>
+        </div>
+        <div class="card__body">
+          <div class="card__head">
+            <h2>Tic-Tac-Toe</h2>
+            <span class="pill">minimax AI</span>
+          </div>
+          <p>You are X against an opponent that never blunders. Win, lose and draw counts are saved locally.</p>
+          <button class="btn" data-play="tictactoe">Play Tic-Tac-Toe</button>
+        </div>
+      </article>
+
+      <article class="card" data-game="snake">
+        <div class="card__thumb">
+          <svg viewBox="0 0 160 100" role="img" aria-label="Snake preview">
+            <rect width="160" height="100" rx="10" fill="#0b1120" />
+            <g fill="#1e293b">
+              <rect x="18" y="18" width="6" height="6" rx="1" />
+              <rect x="34" y="18" width="6" height="6" rx="1" />
+              <rect x="50" y="18" width="6" height="6" rx="1" />
+              <rect x="98" y="72" width="6" height="6" rx="1" />
+              <rect x="114" y="72" width="6" height="6" rx="1" />
+            </g>
+            <g fill="#34d399">
+              <rect x="34" y="42" width="16" height="16" rx="4" />
+              <rect x="50" y="42" width="16" height="16" rx="4" />
+              <rect x="66" y="42" width="16" height="16" rx="4" />
+              <rect x="66" y="26" width="16" height="16" rx="4" />
+              <rect x="82" y="26" width="16" height="16" rx="4" />
+            </g>
+            <circle cx="120" cy="34" r="7" fill="#fb7185" />
+          </svg>
+        </div>
+        <div class="card__body">
+          <div class="card__head">
+            <h2>Snake</h2>
+            <span class="pill">fixed timestep</span>
+          </div>
+          <p>The grid classic with buffered turns, a speed ramp and a high score that survives a reload.</p>
+          <button class="btn" data-play="snake">Play Snake</button>
+        </div>
+      </article>
+
+      <article class="card card--soon">
+        <div class="card__thumb">
+          <svg viewBox="0 0 160 100" role="img" aria-label="Coming soon">
+            <rect width="160" height="100" rx="10" fill="#0b1120" />
+            <g fill="#1e293b">
+              <rect x="26" y="26" width="8" height="8" rx="2" />
+              <rect x="44" y="26" width="8" height="8" rx="2" />
+              <rect x="62" y="26" width="8" height="8" rx="2" />
+              <rect x="26" y="44" width="8" height="8" rx="2" />
+              <rect x="44" y="44" width="8" height="8" rx="2" />
+              <rect x="62" y="44" width="8" height="8" rx="2" />
+              <rect x="26" y="62" width="8" height="8" rx="2" />
+              <rect x="44" y="62" width="8" height="8" rx="2" />
+              <rect x="62" y="62" width="8" height="8" rx="2" />
+            </g>
+            <g stroke="#94a3b8" stroke-width="3" stroke-linecap="round" opacity=".55">
+              <line x1="96" y1="62" x2="132" y2="62" />
+              <line x1="96" y1="62" x2="96" y2="30" />
+            </g>
+            <circle cx="112" cy="40" r="5" fill="#facc15" opacity=".75" />
+          </svg>
+        </div>
+        <div class="card__body">
+          <div class="card__head">
+            <h2>Breakout &amp; friends</h2>
+            <span class="pill pill--muted">soon</span>
+          </div>
+          <p>Pong, Breakout and 2048 plug into the same scene contract &mdash; one module each.</p>
+          <button class="btn btn--ghost" disabled>In the queue</button>
+        </div>
+      </article>
+    </section>
+
+    <section id="stage" class="stage" hidden aria-label="Game stage">
+      <div class="stage__head">
+        <div>
+          <h2 id="stage-title">Game</h2>
+          <p id="stage-hint" class="muted"></p>
+        </div>
+        <button id="leave" class="btn btn--ghost btn--small" type="button">&times; Close</button>
+      </div>
+
+      <div class="stage__body">
+        <div class="canvas-wrap">
+          <div class="canvas-box">
+            <canvas id="canvas" class="stage-canvas" width="720" height="720" tabindex="0"
+                    aria-label="Game canvas"></canvas>
+
+            <div id="boot-overlay" class="overlay" aria-live="polite">
+              <div class="overlay__card">
+                <p class="overlay__title" id="boot-status">Warming up&hellip;</p>
+                <div class="bar"><div id="boot-bar" class="bar__fill"></div></div>
+                <p class="tiny muted">The first launch downloads the Python runtime (~12&nbsp;MB).<br />It is cached, so the next game is instant.</p>
+              </div>
+            </div>
+
+            <div id="error-overlay" class="overlay overlay--error" hidden>
+              <div class="overlay__card">
+                <p class="overlay__title">The runtime stopped.</p>
+                <pre id="error-text" class="error-text"></pre>
+                <button class="btn btn--small" type="button" onclick="location.reload()">Reload</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <aside class="stage__side">
+          <h3>Controls</h3>
+          <div id="keymap" class="keymap"></div>
+
+          <div id="touch-controls" class="touch">
+            <div class="dpad">
+              <button class="tbtn tbtn--up" data-action="up" aria-label="Up">&#9650;</button>
+              <button class="tbtn tbtn--left" data-action="left" aria-label="Left">&#9664;</button>
+              <button class="tbtn tbtn--down" data-action="down" aria-label="Down">&#9660;</button>
+              <button class="tbtn tbtn--right" data-action="right" aria-label="Right">&#9654;</button>
+            </div>
+            <div class="touch__actions">
+              <button class="tbtn" data-action="pause" aria-label="Pause">P</button>
+              <button class="tbtn" data-action="restart" aria-label="Restart">R</button>
+            </div>
+          </div>
+
+          <p class="tiny muted">Scores are stored in your browser. Nothing is uploaded.</p>
+          <p id="runtime-status" class="tiny runtime-status" aria-live="polite">Runtime not loaded yet — press Play.</p>
+        </aside>
+      </div>
+    </section>
+
+    <section class="notes">
+      <div class="note">
+        <h3>Pure logic</h3>
+        <p>Game rules live in modules that never import pygame, so <code>pytest</code> plays them headless in milliseconds.</p>
+      </div>
+      <div class="note">
+        <h3>Fixed timestep</h3>
+        <p>Snake moves on a 0.13&nbsp;s grid tick while the canvas renders at 60&nbsp;fps. Same speed on every monitor.</p>
+      </div>
+      <div class="note">
+        <h3>One runtime</h3>
+        <p>Pyodide boots once. Switching games swaps a Python scene object &mdash; no reload, no second download.</p>
+      </div>
+    </section>
+
+    <section class="reading">
+      <h2>Read the build notes</h2>
+      <p class="muted">Every main function is documented, from the JS loader down to the minimax search.</p>
+      <div class="reading__links">
+        <a href="./docs/ARCHITECTURE.html">Architecture &rarr;</a>
+        <a href="./docs/games/snake.html">Snake &rarr;</a>
+        <a href="./docs/games/tictactoe.html">Tic-Tac-Toe &rarr;</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>Built with Python 3.14, pygame-ce and Pyodide. Hosted on GitHub Pages.</p>
+    <p class="tiny muted" data-repo-block>Source: <a href="#" data-repo-link>add your repository URL</a></p>
+  </footer>
+
+  <noscript>
+    <p class="noscript">These games run on WebAssembly, which needs JavaScript enabled.</p>
+  </noscript>
+
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>
