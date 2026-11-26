@@ -1,17 +1,11 @@
-# GitHub Pages falls back to Jekyll when this branch is the deployment source.
-# The Actions workflow deploys a staged artifact instead and ignores this file.
+# GitHub Pages builds this branch with Jekyll (the Actions workflow stages its
+# own artifact, but the branch build is what GitHub serves today).
 #
-# Two jobs:
-#   1. keep developer material off the branch-built site;
-#   2. force Python's __init__.py files into the output, because Jekyll drops
-#      files whose names start with an underscore.
-include:
-  - python/arcade/__init__.py
-  - python/games/__init__.py
-  - python/games/snake/__init__.py
-  - python/games/tictactoe/__init__.py
-  - python/games/twenty48/__init__.py
-
+# Keep developer material off the public site. Only the files the games need are
+# published: the HTML, src/, python/, manifest.json and the screenshot cards.
+#
+# Nothing here re-includes underscore-named files: the Python packages are
+# namespace packages, so there are no __init__.py files to rescue from Jekyll.
 exclude:
   - docs
   - screenshots

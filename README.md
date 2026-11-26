@@ -108,6 +108,7 @@ fixed-step timing, score persistence, and every draw call in all three scenes
 # play the exact scene in a desktop pygame window, for debugging
 .\.venv\Scripts\python.exe tools\dev_run.py snake
 .\.venv\Scripts\python.exe tools\dev_run.py tictactoe
+.\.venv\Scripts\python.exe tools\dev_run.py twenty48
 
 # re-render screenshots/ from the real scenes (headless)
 .\.venv\Scripts\python.exe tools\screenshots.py
@@ -131,6 +132,11 @@ Deployment is fully automated by
 `docs/` and `screenshots/` are intentionally **not** published: they are
 developer material and stay on GitHub. There is no docs build step; the `.md`
 files are read directly in the repo.
+
+GitHub may serve this repository from a **branch build** (“Deploy from a
+branch”) instead of the artifact. In that case Jekyll reads `_config.yml`, which
+applies the same exclusions. The Python packages are implicit namespace
+packages — no `__init__.py` — because Jekyll drops underscore-prefixed files.
 
 ### One-time repository setup
 

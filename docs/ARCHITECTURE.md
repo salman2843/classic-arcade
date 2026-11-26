@@ -273,9 +273,10 @@ python -m venv .venv
 
 ## Adding a game
 
-1. Create `python/games/<slug>/` with `__init__.py`, `constants.py`,
-   `logic.py` (pure rules) and `scene.py` exposing
-   `build_scene(screen, fonts, scores)`.
+1. Create `python/games/<slug>/` with `constants.py`, `logic.py` (pure rules)
+   and `scene.py` exposing `build_scene(screen, fonts, scores)`. The packages
+   are implicit namespace packages — no `__init__.py`, which is also what lets
+   Jekyll serve them (it drops underscore-prefixed files).
 2. Register the files in `manifest.json` and bump its `version` (cache bust).
 3. Create `<url-slug>/index.html` based on an existing game page, set
    `<body data-game="<slug>">`, and add a card in `index.html`.
@@ -287,24 +288,22 @@ Python will fail with `ModuleNotFoundError` — that is the most common mistake.
 
 ## Deployment
 
-The site is static. The GitHub Actions workflow (`.github/workflows/deploy.yml`)
-does:
+The site is static. Two deployment paths exist, and it is worth knowing which
+one is serving:
 
-1. Install dev dependencies (pip cache keyed to `requirements-dev.txt`).
-2. Run `pytest` — a failing test blocks the deploy.
-3. Copy the runtime files into `_site/` (`index.html`, `snake/`,
-   `tic-tac-toe/`, `2048/`, `src/`, `python/`, `manifest.json`, `.nojekyll`).
-4. Configure Pages, asking GitHub to create the Pages site when it does not
-   exist yet (`enablement: true`).
-5. Upload the folder as a Pages artifact and deploy it.
+- **Branch build (currently live).** With Pages set to “Deploy from a branch”,
+  GitHub runs Jekyll over `main` and serves the result. `_config.yml` excludes
+  `docs/`, `screenshots/`, `tests/`, `tools/`, the README and dev requirements,
+  so only the runtime files are published.
+- **Actions artifact.** `.github/workflows/deploy.yml` installs dev
+  dependencies, runs `pytest` (a failing test blocks the deploy), stages the
+  runtime files into `_site/`, and uploads that folder as the Pages artifact.
+  This path takes over when Pages is set to “GitHub Actions”.
 
-`docs/` and `screenshots/` are developer material and are not published; there
-is no docs build step.
-
-One-time setup: **Settings → Pages → Source: GitHub Actions**, then push to
-`main`. If the workflow token is not allowed to create the Pages site, the run
-fails at `configure-pages`; the manual setting above fixes it, after which
-**Re-run all jobs** completes the deploy.
+The Python packages are implicit namespace packages — there are no
+`__init__.py` files. That is deliberate: Jekyll silently drops files whose names
+start with an underscore, which used to make every Python import fail on the
+live site.
 
 Live site: <https://salman2843.github.io/classic-arcade/>
 
@@ -326,12 +325,12 @@ Notes:
 | Symptom | Likely cause |
 |---|---|
 | Canvas stays black, console mentions a missing canvas | The SDL canvas must keep `id="canvas"`. `setCanvas2D` runs before `pygame` import in `src/loader.js`. |
-| `Could not load python/… (HTTP 404)` | File missing from the repo or from `manifest.json`; check case-sensitivity on Pages. |
+| `Could not load python/… (HTTP 404)` | File missing from the repo or from `manifest.json`; check case-sensitivity on Pages. If it is an `__init__.py`, delete it — the packages are namespace packages and Jekyll drops underscore files. |
 | `/snake/` returns 404 locally or on Pages | The page must live at `snake/index.html`; the folder is what makes the pretty URL work. |
 | Change deployed but behaviour is old | Bump `manifest.json` → `version`, hard-reload once. |
 | “The game stopped” overlay with a traceback | A Python exception escaped a frame; the overlay prints the traceback. The loop stops instead of freezing the tab. |
 | Page feels frozen while a game loads | Expected on first boot (runtime download). Progress is shown in the overlay. |
-| Touch D-pad missing | It only appears for `body[data-game="snake"]` on coarse pointers; desktop uses the keyboard. |
+| Touch D-pad missing | It only appears for Snake and 2048 on coarse pointers; desktop uses the keyboard. |
 | No sound | Not implemented yet; initialize `pygame.mixer` after a user gesture when adding it. |
 
 ## Known limits
