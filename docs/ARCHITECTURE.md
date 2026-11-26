@@ -7,9 +7,10 @@ file is the map of what runs where and what each main function does.
 
 | URL | File | Purpose |
 |---|---|---|
-| `/` | `index.html` | Landing page: hero and two game cards. No runtime download. |
+| `/` | `index.html` | Landing page: hero and three game cards. No runtime download. |
 | `/snake/` | `snake/index.html` | Standalone Snake page. |
 | `/tic-tac-toe/` | `tic-tac-toe/index.html` | Standalone Tic-Tac-Toe page. |
+| `/2048/` | `2048/index.html` | Standalone 2048 page (Python module `games/twenty48`). |
 
 The pages are plain static files, not a single-page app. A card is a normal
 link, the browser back button works, and each game page has an “All games” link
@@ -22,7 +23,7 @@ until the first frame is ready. The landing page never loads Python.
 
 | Layer | Files | Runs where |
 |---|---|---|
-| Page shell (HTML/CSS) | `index.html`, `snake/index.html`, `tic-tac-toe/index.html`, `src/site.css` | Browser DOM |
+| Page shell (HTML/CSS) | `index.html`, `snake/index.html`, `tic-tac-toe/index.html`, `2048/index.html`, `src/site.css` | Browser DOM |
 | Loader and frame driver | `src/loader.js`, `src/game.js` | Browser JS |
 | Home page setup | `src/home.js` | Browser JS |
 | Input | `src/controls.js` | Browser JS |
@@ -148,7 +149,7 @@ in-page stage. The back link and browser history do the navigation.
 | `InputQueue.push_action/push_pointer` | `arcade/input.py` | Bounded queues (32 actions, 8 taps) so a background tab cannot replay a flood. |
 | `FixedStep.advance(dt, interval)` | `arcade/timing.py` | Turns variable frame time into a number of fixed simulation ticks. |
 | `HighScores.get/set` | `arcade/storage.py` | JSON in `localStorage` under `classic-games.v1`; in-memory fallback. |
-| `Fonts`, `text`, `panel`, `overlay`, `lerp_color` | `arcade/theme.py` | One palette and the drawing helpers shared by both games. |
+| `Fonts`, `text`, `panel`, `overlay`, `lerp_color` | `arcade/theme.py` | One palette and the drawing helpers shared by the games. |
 
 ## Input pipeline
 
@@ -184,8 +185,9 @@ Two clocks are in play:
 - **Render clock** — `requestAnimationFrame`, typically 60–144 Hz. Drives
   animation, the food pulse and status text.
 - **Simulation clock** — a fixed interval per game. Snake uses
-  `max(0.065, 0.135 - 0.0005 × score)` seconds per grid move; Tic-Tac-Toe is
-  turn-based and uses a 0.45 s AI “thinking” delay instead.
+  `max(0.065, 0.135 - 0.0005 × score)` seconds per grid move. Tic-Tac-Toe and
+  2048 are turn-based: the AI delay (0.45 s) and player input are the only
+  things that advance them, so they do not use `FixedStep` at all.
 
 `FixedStep.advance` accumulates real `dt` (capped at 0.25 s), subtracts whole
 intervals (at most 8 per frame), and returns the tick count. The leftover time is
@@ -223,6 +225,25 @@ If the state is replaced externally (tests, screenshots), `_body_positions()`
 falls back to no interpolation when the previous body length does not match, so
 a custom board never renders stale positions.
 
+## 2048: one move, four transforms
+
+2048 has no clock and no pixels in its rules. `logic.move(board, direction)`
+returns `(new_board, points, changed)`:
+
+1. Split the board into rows.
+2. Transform so the requested direction becomes “left”:
+   **right** reverses every row, **up** transposes, **down** transposes and
+   reverses.
+3. Slide each line left: drop zeros, merge equal neighbours once, drop zeros
+   again.
+4. Undo the transform.
+
+`logic.slide(state, direction, rng)` is the game rule around that pure function:
+if nothing moved it returns the same state (no spawn, no score), otherwise it
+adds the merge points, spawns exactly one tile, and recomputes `over` with
+`can_move`. The scene only maps actions to directions; all the interesting
+behaviour is testable under plain CPython.
+
 ## Determinism and tests
 
 Every rule module takes its randomness as an argument:
@@ -238,7 +259,8 @@ That is what makes these tests meaningful:
 | `tests/test_snake_logic.py` | Movement, turn buffering, growth, wrapping in both axes, seam self-collision, tail-vacate rule, speed floor, seeded determinism. |
 | `tests/test_tictactoe_logic.py` | Board transitions, wins in every direction, draw detection. |
 | `tests/test_tictactoe_ai.py` | Perfect play draws from the empty board; the AI takes wins, blocks losses, and never loses in 120 games against random. |
-| `tests/test_scenes.py` | Every draw call and the real input pipeline, headless (`SDL_VIDEODRIVER=dummy`), including self-collision and drawing both sides of a wrap. |
+| `tests/test_2048_logic.py` | Seeded openings, one-merge-per-pair, all four directions, spawn-only-on-change, dead-board detection. |
+| `tests/test_scenes.py` | Every draw call and the real input pipeline, headless (`SDL_VIDEODRIVER=dummy`), including self-collision, both sides of a wrap, and a 2048 restart. |
 | `tests/test_engine.py` | Queue bounds, fixed-step math, score persistence. |
 
 Run them with:
@@ -271,7 +293,7 @@ does:
 1. Install dev dependencies (pip cache keyed to `requirements-dev.txt`).
 2. Run `pytest` — a failing test blocks the deploy.
 3. Copy the runtime files into `_site/` (`index.html`, `snake/`,
-   `tic-tac-toe/`, `src/`, `python/`, `manifest.json`, `.nojekyll`).
+   `tic-tac-toe/`, `2048/`, `src/`, `python/`, `manifest.json`, `.nojekyll`).
 4. Configure Pages, asking GitHub to create the Pages site when it does not
    exist yet (`enablement: true`).
 5. Upload the folder as a Pages artifact and deploy it.

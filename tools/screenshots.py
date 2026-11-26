@@ -2,8 +2,8 @@
 
     python tools/screenshots.py
 
-Writes screenshots/snake.png and screenshots/tictactoe.png. The scenes are real,
-only the state is curated so the boards do not look empty.
+Writes screenshots/snake.png, screenshots/tictactoe.png and screenshots/2048.png.
+The scenes are real, only the state is curated so the boards do not look empty.
 """
 
 from __future__ import annotations
@@ -27,6 +27,8 @@ from games.snake import logic as snake_logic  # noqa: E402
 from games.snake.scene import build_scene as build_snake  # noqa: E402
 from games.tictactoe import logic as ttt  # noqa: E402
 from games.tictactoe.scene import build_scene as build_ttt  # noqa: E402
+from games.twenty48 import logic as game2048  # noqa: E402
+from games.twenty48.scene import build_scene as build_2048  # noqa: E402
 
 
 def tictactoe_shot(fonts: Fonts) -> pygame.Surface:
@@ -45,6 +47,27 @@ def tictactoe_shot(fonts: Fonts) -> pygame.Surface:
     scene.finished = True
     scene._finished_at = scene.time
     scene.time = 0.42  # part-way through the pulsing hint
+
+    scene.draw(surface)
+    return surface
+
+
+def game2048_shot(fonts: Fonts) -> pygame.Surface:
+    surface = pygame.Surface((720, 720))
+    scene = build_2048(surface, fonts, HighScores())
+
+    scene.state = game2048.State(
+        board=(
+            2, 4, 8, 16,
+            32, 64, 128, 256,
+            512, 1024, 4, 8,
+            16, 32, 64, 128,
+        ),
+        score=12840,
+        ticks=42,
+    )
+    scene.best = 20480
+    scene.time = 0.3
 
     scene.draw(surface)
     return surface
@@ -84,9 +107,11 @@ def main() -> None:
     OUT.mkdir(exist_ok=True)
     pygame.image.save(tictactoe_shot(fonts), OUT / "tictactoe.png")
     pygame.image.save(snake_shot(fonts), OUT / "snake.png")
+    pygame.image.save(game2048_shot(fonts), OUT / "2048.png")
     pygame.display.quit()
     print(f"wrote {OUT / 'tictactoe.png'}")
     print(f"wrote {OUT / 'snake.png'}")
+    print(f"wrote {OUT / '2048.png'}")
 
 
 if __name__ == "__main__":

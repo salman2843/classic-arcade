@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Play 2048. Slide the tiles, merge the numbers and reach 2048." />
+  <meta name="theme-color" content="#0b1120" />
+  <title>2048 — Arcade / Classic</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230b1120'/%3E%3Crect x='7' y='9' width='5' height='5' rx='1' fill='%2334d399'/%3E%3Crect x='14' y='9' width='5' height='5' rx='1' fill='%2334d399'/%3E%3Crect x='14' y='16' width='5' height='5' rx='1' fill='%2334d399'/%3E%3Crect x='21' y='16' width='5' height='5' rx='1' fill='%23fb7185'/%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="../src/site.css" />
+</head>
+<body data-game="twenty48">
+  <header class="topbar topbar--play">
+    <a class="back" href="../">&larr; All games</a>
+    <a class="brand" href="../" aria-label="Arcade Classic home">
+      <span class="brand__mark" aria-hidden="true"></span>
+      ARCADE<span class="brand__slash">/</span>CLASSIC
+    </a>
+  </header>
+
+  <main class="play">
+    <div class="play__intro">
+      <h1>2048</h1>
+      <p class="muted">Slide the board, merge equal tiles, and build one worth 2048.</p>
+    </div>
+
+    <div class="play__body">
+      <div class="canvas-wrap">
+        <div class="canvas-box">
+          <canvas id="canvas" class="play-canvas" width="720" height="720" tabindex="0"
+                  aria-label="2048 game board"></canvas>
+
+          <div id="boot-overlay" class="overlay" aria-live="polite">
+            <div class="overlay__card">
+              <p class="overlay__title" id="boot-status">Loading game&hellip;</p>
+              <div class="bar"><div id="boot-bar" class="bar__fill"></div></div>
+              <p class="tiny muted">First time takes a few seconds, then it starts instantly.</p>
+            </div>
+          </div>
+
+          <div id="error-overlay" class="overlay overlay--error" hidden>
+            <div class="overlay__card">
+              <p class="overlay__title">The game stopped.</p>
+              <pre id="error-text" class="error-text"></pre>
+              <button class="btn btn--small" type="button" onclick="location.reload()">Reload</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <aside class="play__side">
+        <h3>How to play</h3>
+        <div class="keymap">
+          <div><kbd>Arrows / WASD</kbd><span>Slide</span></div>
+          <div><kbd>P</kbd><span>Pause</span></div>
+          <div><kbd>R</kbd><span>Restart</span></div>
+          <div><kbd>Esc</kbd><span>Back</span></div>
+        </div>
+
+        <div id="touch-controls" class="touch">
+          <div class="dpad">
+            <button class="tbtn tbtn--up" data-action="up" aria-label="Up">&#9650;</button>
+            <button class="tbtn tbtn--left" data-action="left" aria-label="Left">&#9664;</button>
+            <button class="tbtn tbtn--down" data-action="down" aria-label="Down">&#9660;</button>
+            <button class="tbtn tbtn--right" data-action="right" aria-label="Right">&#9654;</button>
+          </div>
+          <div class="touch__actions">
+            <button class="tbtn" data-action="pause" aria-label="Pause">P</button>
+            <button class="tbtn" data-action="restart" aria-label="Restart">R</button>
+          </div>
+        </div>
+
+        <p class="tiny muted">Best score saved in this browser.</p>
+      </aside>
+    </div>
+  </main>
+
+  <noscript>
+    <p class="noscript">This game needs JavaScript enabled.</p>
+  </noscript>
+
+  <script type="module" src="../src/game.js"></script>
+</body>
+</html>

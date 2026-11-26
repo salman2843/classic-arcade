@@ -36,7 +36,7 @@ jobs:
         run: |
           mkdir -p _site
           cp index.html manifest.json _site/
-          cp -r src python snake tic-tac-toe _site/
+          cp -r src python snake tic-tac-toe 2048 _site/
           touch _site/.nojekyll
 
       - uses: actions/configure-pages@v5

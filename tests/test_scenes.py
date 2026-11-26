@@ -23,6 +23,8 @@ from games.tictactoe.constants import BOARD_X, BOARD_Y, CELL
 from games.tictactoe.scene import build_scene as build_ttt
 from games.snake.scene import build_scene as build_snake
 from games.snake.logic import RIGHT, SnakeState
+from games.twenty48 import logic as game2048
+from games.twenty48.scene import build_scene as build_2048
 
 
 @pytest.fixture(scope="module")
@@ -146,3 +148,26 @@ def test_tictactoe_plays_a_full_round(screen, fonts):
     scene.handle_action(Action.RESTART)
     assert scene.board == ttt.new_board()
     assert scene.result is None
+
+def test_2048_slides_scores_and_restarts(screen, fonts):
+    scene = build_2048(screen, fonts, HighScores())
+    scene.state = game2048.State(
+        board=(2, 2, 0, 0) + (0,) * 12,
+    )
+
+    scene.handle_action(Action.LEFT)
+    scene.draw(screen)
+
+    assert scene.state.score == 4
+    assert scene.state.board[0] == 4
+    assert sum(1 for value in scene.state.board if value) == 2
+    assert not scene.state.over
+
+    scene._end_round()
+    assert scene.finished
+    scene.update(0.6)
+    scene.pointer_down(360, 360)
+
+    assert not scene.finished
+    assert scene.state.score == 0
+    assert len(scene.state.board) == 16

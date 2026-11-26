@@ -3,9 +3,9 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="description" content="Play Tic-Tac-Toe against a sharp AI and Snake with wrap-around walls. Two classics, free in your browser." />
+  <meta name="description" content="Play Tic-Tac-Toe against a sharp AI, Snake with wrap-around walls, and 2048. Three classics, free in your browser." />
   <meta name="theme-color" content="#0b1120" />
-  <title>Arcade / Classic — Play Tic-Tac-Toe and Snake</title>
+  <title>Arcade / Classic — Play Tic-Tac-Toe, Snake and 2048</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230b1120'/%3E%3Crect x='7' y='9' width='5' height='5' rx='1' fill='%2334d399'/%3E%3Crect x='14' y='9' width='5' height='5' rx='1' fill='%2334d399'/%3E%3Crect x='14' y='16' width='5' height='5' rx='1' fill='%2334d399'/%3E%3Crect x='21' y='16' width='5' height='5' rx='1' fill='%23fb7185'/%3E%3C/svg%3E" />
   <link rel="stylesheet" href="./src/site.css" />
 </head>
@@ -23,11 +23,12 @@
 
   <main id="top">
     <section class="hero">
-      <p class="eyebrow">Two classics, ready to play</p>
+      <p class="eyebrow">Three classics, ready to play</p>
       <h1>Take a break.<br /><em>Play a classic.</em></h1>
       <p class="lede">
-        Tic-Tac-Toe against an opponent that never lets up, and Snake with
-        wrap-around walls. No installs, no sign-ups — pick one and jump in.
+        Tic-Tac-Toe against an opponent that never lets up, Snake with
+        wrap-around walls, and 2048 when you want a slower burn. No installs,
+        no sign-ups — pick one and jump in.
       </p>
     </section>
 
@@ -93,12 +94,48 @@
           <span class="btn">Play Snake</span>
         </div>
       </a>
+
+      <a class="card" href="./2048/">
+        <div class="card__thumb">
+          <svg viewBox="0 0 160 100" role="img" aria-label="2048 preview">
+            <rect width="160" height="100" rx="10" fill="#0b1120" />
+            <rect x="18" y="16" width="30" height="30" rx="5" fill="#1e2d44" />
+            <rect x="52" y="16" width="30" height="30" rx="5" fill="#263a56" />
+            <rect x="86" y="16" width="30" height="30" rx="5" fill="#146e8c" />
+            <rect x="120" y="16" width="22" height="30" rx="5" fill="#34d399" />
+            <rect x="18" y="50" width="30" height="30" rx="5" fill="#263a56" />
+            <rect x="52" y="50" width="30" height="30" rx="5" fill="#146e8c" />
+            <rect x="86" y="50" width="30" height="30" rx="5" fill="#34d399" />
+            <rect x="120" y="50" width="22" height="30" rx="5" fill="#facc15" />
+            <g fill="#e6edf7" font-family="system-ui, sans-serif" font-size="11" font-weight="700" text-anchor="middle">
+              <text x="33" y="36">2</text>
+              <text x="67" y="36">2</text>
+            </g>
+            <g fill="#0b1120" font-family="system-ui, sans-serif" font-size="11" font-weight="700" text-anchor="middle">
+              <text x="101" y="36">4</text>
+              <text x="131" y="36">8</text>
+              <text x="33" y="70">4</text>
+              <text x="67" y="70">8</text>
+              <text x="101" y="70">16</text>
+              <text x="131" y="70">32</text>
+            </g>
+          </svg>
+        </div>
+        <div class="card__body">
+          <div class="card__head">
+            <h2>2048</h2>
+            <span class="pill">Puzzle</span>
+          </div>
+          <p>Slide the board and merge equal tiles. Keep going until you build one worth 2048. Best score saved in this browser.</p>
+          <span class="btn">Play 2048</span>
+        </div>
+      </a>
     </section>
   </main>
 
   <footer class="footer">
     <p>Scores and records stay in your browser.</p>
-    <p class="tiny muted">Two classics. No installs.</p>
+    <p class="tiny muted">Three classics. No installs.</p>
   </footer>
 
   <noscript>

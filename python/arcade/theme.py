@@ -1,7 +1,7 @@
 """Shared palette, fonts and drawing helpers for the canvas.
 
 All games draw on a fixed 720x720 logical surface that the browser scales with
-CSS. Keeping one palette in one file is what makes the two games look related.
+CSS. Keeping one palette in one file is what makes the games look related.
 """
 
 from __future__ import annotations

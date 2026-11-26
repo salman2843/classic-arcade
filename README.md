@@ -1,8 +1,9 @@
 # Arcade / Classic
 
-Two classic games built with **pygame-ce** and running entirely in the browser
-through **Pyodide** (CPython compiled to WebAssembly). Plain static hosting on
-GitHub Pages — no backend, no database, no build step for the games.
+Three browser games — two arcade classics and a puzzle — built with
+**pygame-ce** and running entirely in the browser through **Pyodide** (CPython
+compiled to WebAssembly). Plain static hosting on GitHub Pages — no backend, no
+database, no build step for the games.
 
 **Play it live:** https://salman2843.github.io/classic-arcade/
 
@@ -10,15 +11,17 @@ GitHub Pages — no backend, no database, no build step for the games.
   → https://salman2843.github.io/classic-arcade/tic-tac-toe/
 - **Snake** — eat, grow, and wrap through the walls to the other side.
   → https://salman2843.github.io/classic-arcade/snake/
+- **2048** — slide, merge, and build a tile worth 2048.
+  → https://salman2843.github.io/classic-arcade/2048/
 
 Scores and win/loss records are stored in the browser (`localStorage`), so there
 is nothing to sign up for and no server to run.
 
-| Tic-Tac-Toe | Snake |
-|---|---|
-| ![Tic-Tac-Toe, diagonal win](screenshots/tictactoe.png) | ![Snake crossing the wrap seam](screenshots/snake.png) |
+| Tic-Tac-Toe | Snake | 2048 |
+|---|---|---|
+| ![Tic-Tac-Toe, diagonal win](screenshots/tictactoe.png) | ![Snake crossing the wrap seam](screenshots/snake.png) | ![A 2048 board part-way through a run](screenshots/2048.png) |
 
-Both images are rendered from the real pygame scenes by
+All three images are rendered from the real pygame scenes by
 `tools/screenshots.py` (`SDL_VIDEODRIVER=dummy`), so they double as a visual
 smoke test.
 
@@ -29,9 +32,10 @@ smoke test.
 | `/` | `index.html` | No — landing page only |
 | `/snake/` | `snake/index.html` | Yes, on page load |
 | `/tic-tac-toe/` | `tic-tac-toe/index.html` | Yes, on page load |
+| `/2048/` | `2048/index.html` | Yes, on page load |
 
 Each game page is standalone: it boots the runtime, starts its one game, and
-shows an **All games** link back to `/`. The landing page only links to the two
+shows an **All games** link back to `/`. The landing page only links to the game
 pages, so a visitor can read it without downloading anything.
 
 ## How it works
@@ -50,9 +54,10 @@ More detail: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 ## Layout
 
 ```text
-index.html                 landing page: hero + two game cards
+index.html                 landing page: hero + three game cards
 snake/index.html           standalone Snake page
 tic-tac-toe/index.html     standalone Tic-Tac-Toe page
+2048/index.html            standalone 2048 page
 src/loader.js              Pyodide boot, module loading, rAF frame loop
 src/game.js                game-page lifecycle: boot, switch, frames, errors
 src/home.js                points the GitHub link at your repo
@@ -62,6 +67,7 @@ python/boot.py             entry point imported inside Pyodide
 python/arcade/             engine: App, BaseScene, InputQueue, FixedStep, storage
 python/games/snake/        logic.py (pure) + scene.py (pygame)
 python/games/tictactoe/    logic.py + ai.py (pure) + scene.py (pygame)
+python/games/twenty48/     2048: logic.py (pure) + scene.py (pygame)
 tests/                     pytest: rules, AI, headless scene smoke tests
 docs/                      developer notes (kept in the repo, not on the site)
 screenshots/               rendered by tools/screenshots.py (README + docs)
@@ -92,8 +98,9 @@ python -m venv .venv
 .\.venv\Scripts\python.exe -m pytest -q
 ```
 
-41 tests cover the rules, the minimax AI, the input queue, fixed-step timing,
-score persistence, and every draw call in both scenes (headless SDL).
+56 tests cover the rules, the minimax AI, the 2048 merges, the input queue,
+fixed-step timing, score persistence, and every draw call in all three scenes
+(headless SDL).
 
 ### Desktop and screenshots
 
@@ -116,7 +123,7 @@ Deployment is fully automated by
 2. Run `pytest -q`. A failing test stops the deploy.
 3. Stage only the runtime files into `_site/`:
    `index.html`, `manifest.json`, `src/`, `python/`, `snake/`,
-   `tic-tac-toe/`, plus `.nojekyll`.
+   `tic-tac-toe/`, `2048/`, plus `.nojekyll`.
 4. Configure Pages (the workflow asks GitHub to create the Pages site if it does
    not exist yet).
 5. Upload `_site/` as the Pages artifact and deploy it.
@@ -141,6 +148,7 @@ it; then use **Re-run all jobs** on the failed run.
 - https://salman2843.github.io/classic-arcade/
 - https://salman2843.github.io/classic-arcade/snake/
 - https://salman2843.github.io/classic-arcade/tic-tac-toe/
+- https://salman2843.github.io/classic-arcade/2048/
 
 All paths are relative, so the same files work at
 `username.github.io` or `username.github.io/repo-name/` without changes.
@@ -163,3 +171,4 @@ All paths are relative, so the same files work at
   frame loop, main functions, testing and deployment.
 - [`docs/games/snake.md`](docs/games/snake.md) — rules, wrap-around, animation.
 - [`docs/games/tictactoe.md`](docs/games/tictactoe.md) — rules and minimax AI.
+- [`docs/games/2048.md`](docs/games/2048.md) — board transforms, merges, scene.

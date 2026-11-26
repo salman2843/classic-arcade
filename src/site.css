@@ -393,7 +393,8 @@ main {
 .touch__actions .tbtn { width: 52px; }
 
 @media (pointer: coarse) {
-  body[data-game="snake"] .touch { display: block; }
+  body[data-game="snake"] .touch,
+  body[data-game="twenty48"] .touch { display: block; }
 }
 
 /* ---------- footer ---------- */

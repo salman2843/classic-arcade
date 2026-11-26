@@ -1,0 +1,24 @@
+# GitHub Pages falls back to Jekyll when this branch is the deployment source.
+# The Actions workflow deploys a staged artifact instead and ignores this file.
+#
+# Two jobs:
+#   1. keep developer material off the branch-built site;
+#   2. force Python's __init__.py files into the output, because Jekyll drops
+#      files whose names start with an underscore.
+include:
+  - python/arcade/__init__.py
+  - python/games/__init__.py
+  - python/games/snake/__init__.py
+  - python/games/tictactoe/__init__.py
+  - python/games/twenty48/__init__.py
+
+exclude:
+  - docs
+  - screenshots
+  - tests
+  - tools
+  - README.md
+  - requirements-dev.txt
+  - .github
+  - .gitignore
+  - .venv

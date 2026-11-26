@@ -1,5 +1,5 @@
 {
-  "version": "2",
+  "version": "3",
   "files": [
     "python/boot.py",
     "python/arcade/__init__.py",
@@ -19,6 +19,10 @@
     "python/games/tictactoe/constants.py",
     "python/games/tictactoe/logic.py",
     "python/games/tictactoe/ai.py",
-    "python/games/tictactoe/scene.py"
+    "python/games/tictactoe/scene.py",
+    "python/games/twenty48/__init__.py",
+    "python/games/twenty48/constants.py",
+    "python/games/twenty48/logic.py",
+    "python/games/twenty48/scene.py"
   ]
 }
