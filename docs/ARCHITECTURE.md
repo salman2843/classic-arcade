@@ -268,16 +268,23 @@ Python will fail with `ModuleNotFoundError` — that is the most common mistake.
 The site is static. The GitHub Actions workflow (`.github/workflows/deploy.yml`)
 does:
 
-1. Install dev dependencies.
+1. Install dev dependencies (pip cache keyed to `requirements-dev.txt`).
 2. Run `pytest` — a failing test blocks the deploy.
 3. Copy the runtime files into `_site/` (`index.html`, `snake/`,
    `tic-tac-toe/`, `src/`, `python/`, `manifest.json`, `.nojekyll`).
-4. Upload the folder as a Pages artifact and deploy it.
+4. Configure Pages, asking GitHub to create the Pages site when it does not
+   exist yet (`enablement: true`).
+5. Upload the folder as a Pages artifact and deploy it.
 
-`docs/` and `screenshots/` are developer material and are not published.
+`docs/` and `screenshots/` are developer material and are not published; there
+is no docs build step.
 
 One-time setup: **Settings → Pages → Source: GitHub Actions**, then push to
-`main`.
+`main`. If the workflow token is not allowed to create the Pages site, the run
+fails at `configure-pages`; the manual setting above fixes it, after which
+**Re-run all jobs** completes the deploy.
+
+Live site: <https://salman2843.github.io/classic-arcade/>
 
 Notes:
 
