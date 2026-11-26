@@ -5,7 +5,9 @@ so a draw is the best available result. Wins, losses and draws are saved locally
 
 ![A diagonal win for X](../../screenshots/tictactoe.png)
 
-- Controls: **click/tap** a square, **P** pause, **R** restart, **Esc** close.
+- Page: `/tic-tac-toe/` (`tic-tac-toe/index.html`).
+- Controls: **click/tap** a square, **P** pause, **R** restart, **Esc** back to
+  all games.
 - Stored counters: `ttt.wins`, `ttt.losses`, `ttt.draws` under `classic-games.v1`.
 
 Source: `python/games/tictactoe/` (`logic.py`, `ai.py`, `scene.py`, `constants.py`).
@@ -113,8 +115,8 @@ delay, occupied-cell rejection, result recording, then restart.
 
 ## Extensions worth trying
 
-- **Difficulty selector** — three buttons in the stage side panel calling
-  `boot.press("...")`, or a HTML control that calls a new `boot.set_difficulty`
+- **Difficulty selector** — three buttons on the game page calling
+  `boot.press("...")`, or a control that calls a new `boot.set_difficulty`
   function; `choose_move` already supports all three levels.
 - **Alternate the starter** — keep a `starting_player` field in `reset()` so the
   AI opens every second round.

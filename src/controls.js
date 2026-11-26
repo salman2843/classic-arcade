@@ -1,7 +1,7 @@
 // Input plumbing: keyboard, canvas taps and on-screen buttons all end up as the
 // same string actions ("left", "pause", …) inside Python's InputQueue.
 
-import { pointerDown, press } from "./loader.js";
+import { pointerDown } from "./loader.js";
 
 const KEY_ACTIONS = {
   arrowleft: "left",
@@ -22,20 +22,16 @@ const KEY_ACTIONS = {
 let send = null;
 let listening = false;
 
-function normalize(event) {
-  return event.key.length === 1 ? event.key.toLowerCase() : event.key.toLowerCase();
-}
-
 function onKeyDown(event) {
   if (!send) return;
-  const action = KEY_ACTIONS[normalize(event)];
+  const action = KEY_ACTIONS[event.key.toLowerCase()];
   if (!action) return;
   event.preventDefault();
   if (!event.repeat) send(action);
 }
 
 /**
- * Enable every input source while a game is on screen.
+ * Enable every input source while a game page is open.
  * @param {(action: string) => void} handler
  */
 export function enableControls(handler) {
@@ -45,7 +41,7 @@ export function enableControls(handler) {
   window.addEventListener("keydown", onKeyDown);
 }
 
-/** Detach keyboard handling when the stage closes (listeners would pile up otherwise). */
+/** Detach keyboard handling when the page goes away (listeners would pile up otherwise). */
 export function disableControls() {
   send = null;
   if (!listening) return;
@@ -83,25 +79,3 @@ for (const button of document.querySelectorAll("[data-action]")) {
     send(button.dataset.action);
   });
 }
-
-// --- audio unlock ------------------------------------------------------------
-
-let audioContext = null;
-
-/**
- * Create/resume an AudioContext during a real click. Browsers block audio that
- * starts without a gesture, so this runs in every Play button handler even
- * though the current games are silent. It is the hook future sound effects use.
- */
-export function unlockAudio() {
-  try {
-    const AudioCtor = window.AudioContext ?? window.webkitAudioContext;
-    if (!AudioCtor) return;
-    audioContext = audioContext ?? new AudioCtor();
-    if (audioContext.state === "suspended") audioContext.resume();
-  } catch {
-    /* audio is optional */
-  }
-}
-
-export { press };

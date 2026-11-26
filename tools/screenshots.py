@@ -56,14 +56,18 @@ def snake_shot(fonts: Fonts) -> pygame.Surface:
 
     scene.state = snake_logic.SnakeState(
         body=(
-            (13, 11), (12, 11), (11, 11), (10, 11), (9, 11),
-            (9, 12), (9, 13), (10, 13), (11, 13), (12, 13),
-            (13, 13), (14, 13), (15, 13),
+            (0, 11), (21, 11), (20, 11), (19, 11), (18, 11), (17, 11),
+            (16, 11), (16, 12), (16, 13), (17, 13), (18, 13), (19, 13),
         ),
         direction=snake_logic.RIGHT,
-        food=(16, 10),
-        score=80,
+        food=(5, 7),
+        score=90,
     )
+    # Halfway through the tick that crossed the right seam: the head is drawn
+    # leaving on the right and arriving on the left at the same time.
+    scene._prev_body = scene.state.body[1:] + (scene.state.body[-1],)
+    scene.timer.reset()
+    scene.timer._accumulator = snake_logic.interval_for(scene.state.score) * 0.45
     scene.best = 120
     scene.time = 0.3
 

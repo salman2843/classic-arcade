@@ -16,13 +16,20 @@ const PYODIDE_BASE = `https://cdn.jsdelivr.net/pyodide/v${PYODIDE_VERSION}/full/
 const FS_ROOT = "/app";
 const BOOT_TIMEOUT_MS = 180_000;
 
+// Site assets are shared by the home page and by /snake/ and /tic-tac-toe/.
+// Resolving against this module (src/loader.js) rather than the current page
+// keeps manifest.json and python/ working from every URL depth.
+const SITE_ROOT = new URL("../", import.meta.url);
+
+function siteAsset(path) {
+  return new URL(path, SITE_ROOT).href;
+}
+
 let pyodide = null;
 let api = null;
 let bootPromise = null;
 let rafId = 0;
 let lastFrameMs = 0;
-
-export const runtimeVersion = `Pyodide ${PYODIDE_VERSION}`;
 
 /** True once pygame is initialized and Python frames can be requested. */
 export function isBooted() {
@@ -40,7 +47,7 @@ export async function boot({ onProgress } = {}) {
   if (bootPromise) return bootPromise;
 
   bootPromise = (async () => {
-    onProgress?.("Downloading Python 3.14…", 0.04);
+    onProgress?.("Loading the game…", 0.04);
 
     const { loadPyodide } = await import(`${PYODIDE_BASE}pyodide.mjs`);
     pyodide = await loadPyodide({ indexURL: PYODIDE_BASE });
@@ -59,11 +66,11 @@ export async function boot({ onProgress } = {}) {
     if (!canvas) throw new Error('Missing <canvas id="canvas"> element.');
     pyodide.canvas.setCanvas2D(canvas);
 
-    onProgress?.("Loading pygame-ce…", 0.32);
+    onProgress?.("Almost there…", 0.32);
     await pyodide.loadPackage("pygame-ce");
 
-    const total = await loadProgram(onProgress);
-    onProgress?.(`Starting pygame (${total} modules)…`, 0.96);
+    await loadProgram(onProgress);
+    onProgress?.("Starting the game…", 0.96);
 
     api = pyodide.pyimport("boot");
     console.info("[loader] Python module ready");
@@ -94,14 +101,14 @@ function withTimeout(promise, ms, message) {
 
 /** Fetch every file listed in manifest.json into the Pyodide memory filesystem. */
 async function loadProgram(onProgress) {
-  const manifest = await fetchJson(`./manifest.json?t=${Date.now()}`);
+  const manifest = await fetchJson(`${siteAsset("manifest.json")}?t=${Date.now()}`);
   const files = Array.isArray(manifest.files) ? manifest.files : [];
   const version = encodeURIComponent(manifest.version ?? "1");
 
   let done = 0;
   await Promise.all(
     files.map(async (path) => {
-      const response = await fetch(`./${path}?v=${version}`);
+      const response = await fetch(`${siteAsset(path)}?v=${version}`);
       if (!response.ok) {
         throw new Error(`Could not load ${path} (HTTP ${response.status}).`);
       }
@@ -112,7 +119,7 @@ async function loadProgram(onProgress) {
 
       done += 1;
       onProgress?.(
-        `Loading game code (${done}/${files.length})…`,
+        "Loading the game…",
         0.5 + 0.42 * (done / files.length),
       );
     }),

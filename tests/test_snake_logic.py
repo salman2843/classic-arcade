@@ -77,7 +77,7 @@ def test_eating_grows_scores_and_respawns_food():
     assert nxt.food not in nxt.body
 
 
-def test_wall_kills_and_leaves_body_intact():
+def test_wrapping_through_the_side_wall_stays_alive():
     state = SnakeState(
         cols=5, rows=5,
         body=((4, 2), (3, 2), (2, 2)),
@@ -86,8 +86,32 @@ def test_wall_kills_and_leaves_body_intact():
 
     nxt = logic.step(state, Random(1))
 
-    assert not nxt.alive
-    assert nxt.body == state.body
+    assert nxt.alive
+    assert nxt.body[0] == (0, 2)
+    assert nxt.body == ((0, 2), (4, 2), (3, 2))
+
+
+def test_wrapping_through_the_top_wall_stays_alive():
+    state = SnakeState(
+        cols=5, rows=5,
+        body=((2, 0), (2, 1), (2, 2)),
+        direction=logic.UP,
+    )
+
+    nxt = logic.step(state, Random(1))
+
+    assert nxt.alive
+    assert nxt.body[0] == (2, 4)
+
+
+def test_crossing_the_seam_into_yourself_kills():
+    state = SnakeState(
+        cols=5, rows=5,
+        body=((4, 2), (0, 2), (1, 2), (2, 2)),
+        direction=logic.RIGHT,
+    )
+
+    assert not logic.step(state, Random(1)).alive
 
 
 def test_running_into_neck_kills():

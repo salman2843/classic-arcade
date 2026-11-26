@@ -22,6 +22,7 @@ from games.tictactoe import logic as ttt
 from games.tictactoe.constants import BOARD_X, BOARD_Y, CELL
 from games.tictactoe.scene import build_scene as build_ttt
 from games.snake.scene import build_scene as build_snake
+from games.snake.logic import RIGHT, SnakeState
 
 
 @pytest.fixture(scope="module")
@@ -46,14 +47,18 @@ def cell_center(index: int) -> tuple[int, int]:
     )
 
 
-def test_snake_runs_into_the_wall_and_can_restart(screen, fonts):
+def test_snake_self_collision_ends_the_round_and_can_restart(screen, fonts):
     scene = build_snake(screen, fonts, HighScores())
+    scene.state = SnakeState(
+        cols=22, rows=22,
+        body=((5, 5), (5, 6), (4, 6), (4, 5)),
+        direction=(0, 1),
+    )
+    scene._prev_body = scene.state.body
+    scene.timer.reset()
 
-    for _ in range(400):
-        scene.update(0.13)
-        scene.draw(screen)
-        if scene.finished:
-            break
+    scene.update(0.14)
+    scene.draw(screen)
 
     assert scene.finished
     assert not scene.state.alive
@@ -72,6 +77,32 @@ def test_snake_runs_into_the_wall_and_can_restart(screen, fonts):
     scene.handle_action(Action.PAUSE)
     scene.handle_action(Action.RESTART)
     assert scene.state.ticks == 0
+
+
+def test_snake_wraps_and_is_drawn_on_both_sides_of_the_edge(screen, fonts):
+    scene = build_snake(screen, fonts, HighScores())
+    scene.state = SnakeState(
+        cols=22, rows=22,
+        body=((21, 11), (20, 11), (19, 11)),
+        direction=RIGHT,
+    )
+    scene._prev_body = scene.state.body
+    scene.timer.reset()
+
+    scene.update(0.14)
+
+    assert scene.state.alive
+    assert scene.state.body[0] == (0, 11)
+
+    heads = [(x, y) for index, x, y in scene._body_positions() if index == 0]
+    assert len(heads) == 2  # one copy leaving right, one arriving left
+
+    interval = 0.135  # interval_for(score=0)
+    scene.timer._accumulator = interval / 2
+    heads = sorted(round(x, 3) for index, x, y in scene._body_positions() if index == 0)
+    assert heads == [0.5, 21.5]
+
+    scene.draw(screen)
 
 
 def test_snake_turns_are_buffered_through_the_action_pipeline(screen, fonts):

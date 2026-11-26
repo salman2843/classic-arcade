@@ -63,6 +63,7 @@ class SnakeScene(BaseScene):
     def reset(self) -> None:
         super().reset()
         self.state = logic.create_state(rng=self.rng)
+        self._prev_body = self.state.body
         self.timer.reset()
         self.best = int(self.scores.get(BEST_KEY, 0))
         self.new_best = False
@@ -88,10 +89,54 @@ class SnakeScene(BaseScene):
 
         interval = logic.interval_for(self.state.score)
         for _ in range(self.timer.advance(dt, interval)):
+            self._prev_body = self.state.body
             self.state = logic.step(self.state, self.rng)
             if not self.state.alive:
                 self._end_round()
                 break
+
+    def _tick_fraction(self) -> float:
+        """0..1 progress toward the next grid tick, used for smooth movement."""
+        interval = logic.interval_for(self.state.score)
+        if interval <= 0:
+            return 1.0
+        return max(0.0, min(1.0, self.timer.remainder / interval))
+
+    def _body_positions(self) -> list[tuple[int, float, float]]:
+        """Continuous grid positions for every segment this frame.
+
+        A segment that crossed an edge produces two positions, one on each side
+        of the board, so the clipped draw shows it leaving and arriving at once.
+        """
+        body = self.state.body
+        prev = self._prev_body
+        if len(prev) not in (len(body), len(body) - 1):
+            prev = body  # the state was replaced externally; do not interpolate
+        alpha = self._tick_fraction()
+        positions: list[tuple[int, float, float]] = []
+
+        for index, (x, y) in enumerate(body):
+            px, py = prev[min(index, len(prev) - 1)]
+            dx, dy = x - px, y - py
+
+            if abs(dx) > 1:
+                step_x = -1 if dx > 0 else 1
+                draw_x = px + step_x * alpha
+                xs = (draw_x, draw_x + dx)
+            else:
+                xs = (px + dx * alpha,)
+
+            if abs(dy) > 1:
+                step_y = -1 if dy > 0 else 1
+                draw_y = py + step_y * alpha
+                ys = (draw_y, draw_y + dy)
+            else:
+                ys = (py + dy * alpha,)
+
+            for ox in xs:
+                for oy in ys:
+                    positions.append((index, ox, oy))
+        return positions
 
     def _end_round(self) -> None:
         if self.state.score > self.best:
@@ -148,30 +193,40 @@ class SnakeScene(BaseScene):
     def _draw_snake(self, surface: pygame.Surface) -> None:
         body = self.state.body
         count = len(body)
-        for index in range(count - 1, -1, -1):
-            x, y = body[index]
+        positions = self._body_positions()
+
+        # Segments sliding across an edge are drawn outside the board for part
+        # of the tick, so clip everything to the playfield.
+        previous_clip = surface.get_clip()
+        surface.set_clip(pygame.Rect(BOARD_X, BOARD_Y, BOARD_WIDTH, BOARD_HEIGHT))
+
+        for index, x, y in reversed(positions):
             t = 1.0 if count == 1 else (count - 1 - index) / (count - 1)
             color = theme.lerp_color(theme.MINT_DARK, theme.MINT, t)
             rect = pygame.Rect(
-                BOARD_X + x * CELL + SEGMENT_INSET,
-                BOARD_Y + y * CELL + SEGMENT_INSET,
+                round(BOARD_X + x * CELL + SEGMENT_INSET),
+                round(BOARD_Y + y * CELL + SEGMENT_INSET),
                 CELL - SEGMENT_INSET * 2,
                 CELL - SEGMENT_INSET * 2,
             )
             pygame.draw.rect(surface, color, rect, border_radius=SEGMENT_RADIUS)
 
         # Eyes on the head, offset perpendicular to the travel direction.
-        head_x, head_y = body[0]
-        center_x = BOARD_X + head_x * CELL + CELL // 2
-        center_y = BOARD_Y + head_y * CELL + CELL // 2
         dx, dy = self.state.direction
         px, py = -dy, dx
-        for sign in (-1, 1):
-            eye = (
-                int(center_x + dx * 4 + px * 5 * sign),
-                int(center_y + dy * 4 + py * 5 * sign),
-            )
-            pygame.draw.circle(surface, theme.BG, eye, 3)
+        for index, head_x, head_y in positions:
+            if index != 0:
+                continue
+            center_x = BOARD_X + head_x * CELL + CELL / 2
+            center_y = BOARD_Y + head_y * CELL + CELL / 2
+            for sign in (-1, 1):
+                eye = (
+                    round(center_x + dx * 4 + px * 5 * sign),
+                    round(center_y + dy * 4 + py * 5 * sign),
+                )
+                pygame.draw.circle(surface, theme.BG, eye, 3)
+
+        surface.set_clip(previous_clip)
 
     def _draw_game_over(self, surface: pygame.Surface) -> None:
         theme.overlay(surface, 192)

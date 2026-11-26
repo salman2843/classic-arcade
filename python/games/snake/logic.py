@@ -90,10 +90,12 @@ def queue_direction(state: SnakeState, direction: Direction) -> SnakeState:
 
 
 def step(state: SnakeState, rng: Random) -> SnakeState:
-    """Advance one grid tick: move, eat, grow or die.
+    """Advance one grid tick: wrap at the edges, move, eat, grow or die.
 
-    Eating the tail cell is legal only on a non-eating move, because the tail
-    vacates before the head arrives. That detail is covered by the tests.
+    The board is a torus: stepping past the right edge enters at the left edge
+    (and likewise vertically). The only way to die is running into your own
+    body. Eating the tail cell is legal on a non-eating move, because the tail
+    vacates before the head arrives; the tests lock both rules in.
     """
     if not state.alive:
         return state
@@ -101,13 +103,15 @@ def step(state: SnakeState, rng: Random) -> SnakeState:
     direction = state.pending[0] if state.pending else state.direction
     pending = state.pending[1:]
     head_x, head_y = state.body[0]
-    head = (head_x + direction[0], head_y + direction[1])
+    head = (
+        (head_x + direction[0]) % state.cols,
+        (head_y + direction[1]) % state.rows,
+    )
 
-    hit_wall = not (0 <= head[0] < state.cols and 0 <= head[1] < state.rows)
     eating = head == state.food
     hit_self = head in (state.body if eating else state.body[:-1])
 
-    if hit_wall or hit_self:
+    if hit_self:
         return replace(state, alive=False, direction=direction, pending=())
 
     body = (head,) + (state.body if eating else state.body[:-1])

@@ -5,8 +5,9 @@ __pycache__/
 .venv/
 venv/
 
-# Generated documentation (built in CI by tools/build_docs.py)
-docs/**/*.html
+# Build/staging output
+_site/
+build/
 
 # OS / editors
 .DS_Store

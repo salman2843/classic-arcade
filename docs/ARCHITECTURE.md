@@ -1,36 +1,47 @@
 # How this site works
 
-Two classic games, written in Python, running in the browser with no server.
-This page is the map: what runs where, what each main function does, and what
-happens between a Play click and a painted frame.
+Developer notes for this repository. The live site shows only the games; this
+file is the map of what runs where and what each main function does.
 
-- **Tic-Tac-Toe** — [game notes](games/tictactoe.md)
-- **Snake** — [game notes](games/snake.md)
+## Pages
+
+| URL | File | Purpose |
+|---|---|---|
+| `/` | `index.html` | Landing page: hero and two game cards. No runtime download. |
+| `/snake/` | `snake/index.html` | Standalone Snake page. |
+| `/tic-tac-toe/` | `tic-tac-toe/index.html` | Standalone Tic-Tac-Toe page. |
+
+The pages are plain static files, not a single-page app. A card is a normal
+link, the browser back button works, and each game page has an “All games” link
+back to `/`.
+
+Each game page boots the Python runtime on load and shows a progress overlay
+until the first frame is ready. The landing page never loads Python.
 
 ## The layers
 
 | Layer | Files | Runs where |
 |---|---|---|
-| Page shell (HTML/CSS) | `index.html`, `src/site.css` | Browser DOM |
-| Loader and frame driver | `src/loader.js` | Browser JS |
-| Input and routing | `src/controls.js`, `src/router.js`, `src/main.js` | Browser JS |
+| Page shell (HTML/CSS) | `index.html`, `snake/index.html`, `tic-tac-toe/index.html`, `src/site.css` | Browser DOM |
+| Loader and frame driver | `src/loader.js`, `src/game.js` | Browser JS |
+| Home page setup | `src/home.js` | Browser JS |
+| Input | `src/controls.js` | Browser JS |
 | Python runtime | Pyodide + `pygame-ce` from jsDelivr | WebAssembly |
 | Engine | `python/arcade/*` | WebAssembly |
 | Game rules (pure) | `python/games/*/logic.py`, `ai.py` | WebAssembly **and** your laptop |
 | Game scenes (pygame) | `python/games/*/scene.py` | WebAssembly **and** your laptop |
 | Tests | `tests/*.py` | Your laptop / CI only |
 
-The important split: **rules never import pygame**. `logic.py` can be tested in
-milliseconds under plain CPython, and `scene.py` is the only place that knows
-about pixels, keys and timers.
+The important split: **rules never import pygame**. `logic.py` is tested under
+plain CPython in milliseconds, and `scene.py` is the only place that knows about
+pixels, keys and timers.
 
 ## Boot sequence
 
-Everything starts when the visitor presses a Play button. Nothing is downloaded
-before that, so the landing page stays light.
+Everything starts when a game page opens:
 
-1. `play(slug)` in `src/main.js` opens the stage, updates the URL hash, and calls
-   `boot()` — once per page visit.
+1. `src/game.js` runs, reads the slug from `<body data-game="…">`, and enables
+   keyboard input. Escape works even while the game is loading.
 2. `boot()` dynamically imports `pyodide.mjs` from the pinned CDN URL
    (`PYODIDE_VERSION` in `src/loader.js`).
 3. `loadPyodide()` starts CPython 3.14 in WebAssembly.
@@ -46,8 +57,8 @@ before that, so the landing page stays light.
 8. `sys.path.insert(0, "/app/python")`, then `pyimport("boot")` imports the entry
    module. Importing it runs the top-level code: display and font init,
    `set_mode((720, 720))`, and construction of the `App`.
-9. `switchGame(slug)` asks Python for the scene, and `startLoop()` begins
-   requesting frames.
+9. `switchGame(slug)` builds the page's scene, the overlay is hidden, and
+   `startLoop()` begins requesting frames.
 
 Why a manifest instead of a wheel? A wheel is the right answer for a large
 library, but this project is a handful of small files. A plain list keeps the
@@ -69,15 +80,15 @@ requestAnimationFrame(now)
 
 **Why `requestAnimationFrame` instead of an `asyncio` loop.** The common Pyodide
 recipe is `while True: … await asyncio.sleep(1/60)`. That works, but the loop
-becomes a task you must pause, resume, cancel and recreate on every navigation,
-and an uncaught exception silently kills rendering. One JS callback per frame
-means Python can never block the tab, pausing is `cancelAnimationFrame`, and
-`startLoop` can catch the exception and show it in the error overlay.
+becomes a task you must pause, resume, cancel and recreate, and an uncaught
+exception silently kills rendering. One JS callback per frame means Python can
+never block the tab, pausing is `cancelAnimationFrame`, and `startLoop` can catch
+the exception and show it in the error overlay.
 
 **Why the dt clamp.** When a tab is hidden the browser throttles or stops
 `requestAnimationFrame`. On return, the first `dt` can be many seconds. The clamp
 (`0.05` s) plus `FixedStep.max_frame` (`0.25` s) prevents a burst of simulation
-ticks that would teleport the snake through a wall.
+ticks.
 
 ## Main functions
 
@@ -88,32 +99,35 @@ ticks that would teleport the snake through a wall.
 | `boot({ onProgress })` | One-time runtime setup. Shares a single promise, resets on failure so Reload can retry. Returns the Python `boot` module proxy. |
 | `loadProgram(onProgress)` | Fetches `manifest.json` and each file, creates directories, writes bytes into `/app`, registers `/app/python` on `sys.path`. |
 | `mkdirTree(path)` | Creates the `/app/...` directory chain before `FS.writeFile`. |
-| `isBooted()` | Whether the runtime is ready (used to skip the 12 MB download on later plays). |
+| `isBooted()` | Whether the runtime is ready (used to skip the download on later calls in the same page). |
 | `switchGame(slug)` | Calls Python `boot.switch_game(slug)`. Imports the game module once, then resets the scene. |
 | `press(action)` | Queues a string action (`"left"`, `"pause"`, …) into `InputQueue`. |
 | `pointerDown(x, y)` | Queues a canvas tap already converted to 720×720 coordinates. |
 | `startLoop(onError)` | Requests one Python frame per animation frame; on exception stops the loop and reports it. |
-| `stopLoop()` | Cancels the pending frame. The Python runtime stays warm for instant resume. |
+| `stopLoop()` | Cancels the pending frame. |
 
-### JavaScript — the rest of the shell
+### JavaScript — page and input
 
 | Function | File | Responsibility |
 |---|---|---|
-| `play(slug)` | `src/main.js` | Opens the stage, boots if needed, switches the scene, enables input. |
-| `closeStage()` | `src/main.js` | Stops frames, disables input, clears the hash, hides the stage. |
-| `showError(error)` / `setProgress()` | `src/main.js` | Feed the error overlay and boot progress bar. |
-| `enableControls(send)` | `src/controls.js` | Maps keys to actions and attaches listeners while a game is open. |
-| `disableControls()` | `src/controls.js` | Removes those listeners so they never pile up. |
+| `start()` | `src/game.js` | Enables input, boots if needed, switches to this page's game, starts frames. |
+| `setProgress()` | `src/game.js` | Updates the loading overlay text and bar. |
+| `showError(error)` | `src/game.js` | Stops the overlay and prints the Python traceback in the error card. |
+| `goHome()` | `src/game.js` | Navigates to `../` — used by Escape. |
+| `REPO_URL` | `src/home.js` | One place to set the GitHub link; empty means the link removes itself. |
+| `enableControls(send)` | `src/controls.js` | Maps keys to actions and attaches the keyboard listener. |
+| `disableControls()` | `src/controls.js` | Removes that listener on `pagehide`. |
 | `canvasPoint(canvas, event)` | `src/controls.js` | Converts a pointer position on the CSS-scaled canvas back to 720×720. |
-| `unlockAudio()` | `src/controls.js` | Creates/resumes an `AudioContext` inside the Play click (audio policy hook). |
-| `currentSlug()` / `writeSlug()` | `src/router.js` | Read and replace the `#/play/<slug>` route. |
+
+A game page is a real page: there is no router, no `#/play/...` hash and no
+in-page stage. The back link and browser history do the navigation.
 
 ### Python — `python/boot.py`
 
 | Function | Responsibility |
 |---|---|
 | Module import | `pygame.display.init()`, `pygame.font.init()`, `set_mode((720, 720))`, build the `App`. Audio is deliberately not initialized. |
-| `switch_game(slug)` | Selects the game then resets it, so every Play press starts a fresh round. |
+| `switch_game(slug)` | Selects the game then resets it, so every page load starts a fresh round. |
 | `press(action)` | Forwards an action string into `App.input`. |
 | `pointer_down(x, y)` | Forwards a canvas tap into `App.input`. |
 | `arcade_frame(dt)` | The whole visible frame: pump SDL, then `App.frame(dt)`. |
@@ -125,7 +139,7 @@ ticks that would teleport the snake through a wall.
 | `App.switch(slug)` | `arcade/app.py` | Imports `games.<slug>.scene` lazily and calls its `build_scene()` factory. |
 | `App.reset_scene()` | `arcade/app.py` | Fresh round; clears queued input. |
 | `App.frame(dt)` | `arcade/app.py` | Drains input, updates, draws, flips the display. The one place the frame order is defined. |
-| `BaseScene.handle_action(action)` | `arcade/scene.py` | Global behavior first: pause, restart, "action" after game over; then the game hook. |
+| `BaseScene.handle_action(action)` | `arcade/scene.py` | Global behavior first: pause, restart, “action” after game over; then the game hook. |
 | `BaseScene.pointer_down(x, y)` | `arcade/scene.py` | Ignores taps while paused; restarts after a finish once the grace period passes; otherwise calls `on_pointer`. |
 | `BaseScene.update(dt)` | `arcade/scene.py` | Advances `time` and calls `tick(dt)` unless paused. Finished scenes keep animating. |
 | `BaseScene.draw(surface)` | `arcade/scene.py` | Calls the game's `render()`, then draws the pause overlay. |
@@ -160,6 +174,9 @@ us call `preventDefault()` (so arrows don't scroll the page), handle touch
 buttons through the identical path, and avoid focus quirks. `pygame.event.pump()`
 is still called each frame to keep SDL's window/event machinery healthy.
 
+Escape is special: `game.js` intercepts it and navigates home instead of sending
+it to Python.
+
 ## Timing model
 
 Two clocks are in play:
@@ -168,15 +185,43 @@ Two clocks are in play:
   animation, the food pulse and status text.
 - **Simulation clock** — a fixed interval per game. Snake uses
   `max(0.065, 0.135 - 0.0005 × score)` seconds per grid move; Tic-Tac-Toe is
-  turn-based and uses a 0.45 s AI "thinking" delay instead.
+  turn-based and uses a 0.45 s AI “thinking” delay instead.
 
 `FixedStep.advance` accumulates real `dt` (capped at 0.25 s), subtracts whole
-intervals (at most 8 per frame), and returns the tick count. Consequences:
+intervals (at most 8 per frame), and returns the tick count. The leftover time is
+available as `FixedStep.remainder`.
 
-- The snake moves at the same speed on a 60 Hz and a 144 Hz display.
-- The 0.05 s clamp in JS plus the 0.25 s cap in Python prevent catch-up spirals.
-- A tick's leftover time is available as `FixedStep.remainder` for future
-  interpolation.
+## Snake: wrapping and interpolation
+
+The board is a torus. `logic.step` computes the next head with modulo:
+
+```python
+head = ((x + dx) % cols, (y + dy) % rows)
+```
+
+So moving off the right edge enters at the left, and the only way to die is
+hitting your own body. Self-collision is checked against the body, except the
+tail on a non-eating move (the tail vacates that tick).
+
+Because a wrapped head jumps from cell 21 to cell 0, the scene does not draw raw
+grid cells directly. Instead:
+
+1. Before every grid tick, `SnakeScene` stores `_prev_body`.
+2. `_tick_fraction()` returns `FixedStep.remainder / interval` — how far the
+   current tick is toward the next snapshot.
+3. `_body_positions()` interpolates every segment from its previous cell to its
+   current cell. For a wrapped segment it emits **two** positions: one leaving
+   the old edge, one arriving on the opposite edge.
+4. `_draw_snake()` clips the whole draw to the board rectangle and then blits the
+   rounded segments, so the departing copy is cut off at the wall while the
+   arriving copy grows in on the other side.
+5. Eyes are drawn at the interpolated head position on both copies (the clipped
+   one is usually invisible). The result is a snake that visibly slides across
+   the seam instead of teleporting.
+
+If the state is replaced externally (tests, screenshots), `_body_positions()`
+falls back to no interpolation when the previous body length does not match, so
+a custom board never renders stale positions.
 
 ## Determinism and tests
 
@@ -190,10 +235,10 @@ That is what makes these tests meaningful:
 
 | Test file | Proves |
 |---|---|
-| `tests/test_snake_logic.py` | Movement, turn buffering, growth, wall/self death, tail-vacate rule, speed floor, seeded determinism. |
+| `tests/test_snake_logic.py` | Movement, turn buffering, growth, wrapping in both axes, seam self-collision, tail-vacate rule, speed floor, seeded determinism. |
 | `tests/test_tictactoe_logic.py` | Board transitions, wins in every direction, draw detection. |
 | `tests/test_tictactoe_ai.py` | Perfect play draws from the empty board; the AI takes wins, blocks losses, and never loses in 120 games against random. |
-| `tests/test_scenes.py` | Every draw call and the real input pipeline, headless (`SDL_VIDEODRIVER=dummy`). |
+| `tests/test_scenes.py` | Every draw call and the real input pipeline, headless (`SDL_VIDEODRIVER=dummy`), including self-collision and drawing both sides of a wrap. |
 | `tests/test_engine.py` | Queue bounds, fixed-step math, score persistence. |
 
 Run them with:
@@ -210,9 +255,9 @@ python -m venv .venv
    `logic.py` (pure rules) and `scene.py` exposing
    `build_scene(screen, fonts, scores)`.
 2. Register the files in `manifest.json` and bump its `version` (cache bust).
-3. Add a card in `index.html` with `data-game` / `data-play`, and an entry in the
-   `GAMES` object in `src/main.js` for its title, hint and control legend.
-4. Add `docs/games/<slug>.md` and list it in `PAGES` in `tools/build_docs.py`.
+3. Create `<url-slug>/index.html` based on an existing game page, set
+   `<body data-game="<slug>">`, and add a card in `index.html`.
+4. Add `docs/games/<slug>.md` and link it from this file and the README.
 5. Add rules tests; extend `tests/test_scenes.py` with a headless draw/run test.
 
 If a file is missing from `manifest.json`, the loader will never fetch it and
@@ -225,10 +270,11 @@ does:
 
 1. Install dev dependencies.
 2. Run `pytest` — a failing test blocks the deploy.
-3. Render Markdown docs to HTML (`tools/build_docs.py`).
-4. Copy the runtime files into `_site/` (`index.html`, `src/`, `python/`,
-   `manifest.json`, `docs/`, `screenshots/`, `.nojekyll`).
-5. Upload the folder as a Pages artifact and deploy it.
+3. Copy the runtime files into `_site/` (`index.html`, `snake/`,
+   `tic-tac-toe/`, `src/`, `python/`, `manifest.json`, `.nojekyll`).
+4. Upload the folder as a Pages artifact and deploy it.
+
+`docs/` and `screenshots/` are developer material and are not published.
 
 One-time setup: **Settings → Pages → Source: GitHub Actions**, then push to
 `main`.
@@ -240,8 +286,8 @@ Notes:
 - Pyodide, its standard library and the pygame wheel come from jsDelivr, not from
   your Pages quota. Your bandwidth serves only the shell plus a few dozen KB of
   Python.
-- First launch downloads roughly 12 MB. Later visits and later games reuse the
-  browser cache and the already-booted runtime.
+- Each game page boots its own runtime. The WASM and wheel are cached by the
+  browser, so the second game page is much faster than the first.
 - `manifest.json` is fetched with a timestamp; its `version` is appended to every
   module URL. Bump the version when you change Python code or users may see a
   cached module.
@@ -252,21 +298,23 @@ Notes:
 |---|---|
 | Canvas stays black, console mentions a missing canvas | The SDL canvas must keep `id="canvas"`. `setCanvas2D` runs before `pygame` import in `src/loader.js`. |
 | `Could not load python/… (HTTP 404)` | File missing from the repo or from `manifest.json`; check case-sensitivity on Pages. |
+| `/snake/` returns 404 locally or on Pages | The page must live at `snake/index.html`; the folder is what makes the pretty URL work. |
 | Change deployed but behaviour is old | Bump `manifest.json` → `version`, hard-reload once. |
-| "The runtime stopped" overlay with a traceback | A Python exception escaped a frame; the overlay prints the traceback. The loop stops instead of freezing the tab. |
+| “The game stopped” overlay with a traceback | A Python exception escaped a frame; the overlay prints the traceback. The loop stops instead of freezing the tab. |
 | Page feels frozen while a game loads | Expected on first boot (runtime download). Progress is shown in the overlay. |
 | Touch D-pad missing | It only appears for `body[data-game="snake"]` on coarse pointers; desktop uses the keyboard. |
-| No sound | Intentionally not implemented yet; `unlockAudio()` in `controls.js` is the ready hook. |
+| No sound | Not implemented yet; initialize `pygame.mixer` after a user gesture when adding it. |
 
 ## Known limits
 
 - SDL support in Pyodide is explicitly experimental. The Pyodide version is
   pinned in `src/loader.js`; upgrading it is a deliberate, tested change.
-- A Pyodide instance can target exactly one canvas, so the site has one shared
-  stage rather than one canvas per game.
+- A Pyodide instance can target exactly one canvas. Each game page is its own
+  instance, so this is a non-issue.
 - There are no threads. Keep per-frame work small: no network or disk I/O inside
   `render()`/`tick()`.
-- The first load is ~12 MB. The runtime is not bundled into the repository.
+- The first game page downloads roughly 12 MB. The runtime is not bundled into
+  the repository.
 
 ## Version pins
 
